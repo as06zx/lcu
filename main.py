@@ -111,7 +111,8 @@ async def cmdHelp(parameter):
     elif helpIndex == "2":
         outMsg = outMsg + "[help 2/2]\n/닉검색 닉네임: 닉네임이 사용중인지 검색합니다.\n"
         outMsg = outMsg + "/생성: 닉네임을 등록합니다.\n"
-        outMsg = outMsg + "/정보 닉네임: ...\n"
+        outMsg = outMsg + "/정보 닉네임: 정보를 확인합니다.\n"
+        outMsg = outMsg + "/기부 닉네임 금액: 포인트를 기부합니다."
         await sendMessage(connection, outMsg)
 
 async def cmdHi(parameter):
@@ -172,7 +173,7 @@ async def cmdInfo(parameter):
     lastMessage = lastEvent.data
     userid      = lastMessage["fromSummonerId"]
     username    = memberList[userid]
-    targetName    = parameter[0]
+    targetName  = parameter[0]
     outMsg = ""
 
     targetDB = await findUserDB(targetName)
@@ -187,6 +188,36 @@ async def cmdInfo(parameter):
     outMsg = outMsg + f"Point -> {point}"
     await sendMessage(connection, outMsg)
 
+async def cmdGive(parameter):
+    if len(parameter) != 2:
+        #await sendMessage(connection, "!!")
+        return
+
+    connection  = lastConnection
+    lastMessage = lastEvent.data
+    userid      = lastMessage["fromSummonerId"]
+    username    = memberList[userid]
+    targetName  = parameter[0]
+    amount      = int(parameter[1])
+    outMsg = ""
+    
+    targetDB = await findUserDB(targetName)
+    userDB   = await findUserDB(username)
+
+    if username == targetName:
+        await sendMessage(connection, "자신에게 보낼 수 없습니다.")
+        return
+
+    if amount > userDB["Point"]:
+        await sendMessage(connection, "보유중인 포인트보다 많습니다.")
+        return
+        
+    await editUserDB(username,   "Point", userDB["Point"]-amount)
+    await editUserDB(targetName, "Point", targetDB["Point"]+amount)
+    outMsg = outMsg + f"{username} 포인트 기부 ({str(amount)}) -> {targetName}"
+    await sendMessage(connection, outMsg)
+    
+
 async def updateCommand():
     commands["help"] = cmdHelp
     commands["hi"]   = cmdHi
@@ -195,6 +226,7 @@ async def updateCommand():
     commands["닉검색"] = cmdFindName
     commands["생성"]   = cmdCreate
     commands["정보"]   = cmdInfo
+    commands["기부"]   = cmdGive
 
 @connector.ready
 async def connect(connection):
@@ -208,6 +240,10 @@ async def connect(connection):
 async def onChatChanged(connection, event):
     global lastConnection, lastEvent
     lastMessage = event.data
+
+    if not "body" in lastMessage:
+        return
+
     body = lastMessage["body"]
     type = lastMessage["type"]
     lastConnection = connection
@@ -216,6 +252,13 @@ async def onChatChanged(connection, event):
     if type != "groupchat":
         return
 
+    userid      =   lastMessage["fromSummonerId"]
+    username    =   memberList[userid]    
+    userDB      =   await findUserDB(username)
+    if userDB:
+        await editUserDB(username, "Point", userDB["Point"]+1)
+
+    # move to here ->  userinfo -> later u-u
     if body[0:1] == "/":
         command = (body[1:]).split(" ", 1)[0]
         parameters = re.split('\s+', body[len(command)+1:len(body)].strip())
