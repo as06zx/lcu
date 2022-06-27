@@ -2,23 +2,19 @@ from lcu_driver import Connector
 
 connector = Connector()
 
+import time
+import re
+
 summonerID = ''
 roomID = ''
 memberList = {}
+commands = []
 
 async def sendMessage(connection, text):
     global summonerID, roomID
     messageDataBody = {
     "body": "/나 " + text,
-    "fromId": roomID,
-    "fromPid": roomID ,
-    "fromSummonerId": int(summonerID),
-    "id": "1655714801452:63",
-    "isHistorical": True,
-    "timestamp": "2022-06-20T08:46:41.560Z",
-    "type": "chat"
     }
-    
     await connection.request('post', '/lol-chat/v1/conversations/' + roomID + '/messages', data=messageDataBody)
     
 async def updateRoomInfo(connection):
@@ -37,6 +33,10 @@ async def updateMemberList(connection):
         if not dict["summonerId"] in memberList:
             memberList[dict["summonerId"]] = dict["summonerName"]
 
+async def getMemberCount(connection):
+    members = (await (await connection.request('get', '/lol-lobby/v2/lobby/members/')).json())
+    return len(members)
+
 async def updateSummonerInfo(connection):
     global summonerID
     summoner = (await (await connection.request('get', '/lol-summoner/v1/current-summoner')).json())
@@ -52,13 +52,28 @@ async def connect(connection):
 @connector.ws.register('/lol-chat/v1/conversations/', event_types=('CREATE',))
 async def onChatChanged(connection, event):
     lastMessage = event.data
+    body = lastMessage["body"]
+    type = lastMessage["type"]
+
+    if type != "groupchat":
+        return
 
     if lastMessage["body"] == "/help":
-        await sendMessage(connection, "reply-bot\n/hi: say hi\n/time: say time")
+        await sendMessage(connection, "reply-bot\n/hi /time /membercount")
     if lastMessage["body"] == "/hi":
         await sendMessage(connection, memberList[lastMessage["fromSummonerId"]] + " hi!")
     if lastMessage["body"] == "/time":
-        await sendMessage(connection, lastMessage["timestamp"])
+        tm = time.localtime(time.time())
+        year = str(tm.tm_year)
+        mon  = str(tm.tm_mon)
+        mday = str(tm.tm_mday)
+        hour = str(tm.tm_hour)
+        min  = str(tm.tm_min)
+        outMsg = f"{year}-{mon}-{mday} | {hour}:{min}"
+        await sendMessage(connection, outMsg)
+    if lastMessage["body"] == "/membercount":
+        memberCount = await getMemberCount(connection)
+        await sendMessage(connection, "there is " + str(memberCount) + " players")
 
 
 @connector.close
