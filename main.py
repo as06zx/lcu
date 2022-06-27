@@ -37,12 +37,14 @@ async def updateMemberList(connection):
         if not dict["summonerId"] in memberList:
             memberList[dict["summonerId"]] = dict["summonerName"]
 
+async def updateSummonerInfo(connection):
+    global summonerID
+    summoner = (await (await connection.request('get', '/lol-summoner/v1/current-summoner')).json())
+    summonerID = summoner["summonerId"]
+
 @connector.ready
 async def connect(connection):
-    global summonerID
-    print('LCU API is ready to be used.')
-    summoner = (await (await connection.request('get', '/lol-summoner/v1/current-summoner')).json())
-    summonerID = summoner['summonerId']
+    await updateSummonerInfo(connection)
     await updateRoomInfo(connection)
     await updateMemberList(connection)
     await sendMessage(connection, "type /help for a list of commands.")
@@ -61,7 +63,6 @@ async def onChatChanged(connection, event):
 
 @connector.close
 async def disconnect(connection):
-    print('Finished task')
     await connector.stop()
 
 connector.start()
