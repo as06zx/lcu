@@ -9,7 +9,7 @@ memberList = {}
 async def sendMessage(connection, text):
     global summonerID, roomID
     messageDataBody = {
-    "body": "[a] " + text,
+    "body": "/나 " + text,
     "fromId": roomID,
     "fromPid": roomID ,
     "fromSummonerId": int(summonerID),
@@ -52,7 +52,7 @@ async def onChatChanged(connection, event):
     lastMessage = event.data
 
     if lastMessage["body"] == "/help":
-        await sendMessage(connection, "/hi: say hi\n/time: say time")
+        await sendMessage(connection, "reply-bot\n/hi: say hi\n/time: say time")
     if lastMessage["body"] == "/hi":
         await sendMessage(connection, memberList[lastMessage["fromSummonerId"]] + " hi!")
     if lastMessage["body"] == "/time":
