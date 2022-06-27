@@ -2,6 +2,7 @@ from lcu_driver import Connector
 
 connector = Connector()
 
+import os.path
 import time
 import re
 
@@ -47,13 +48,71 @@ async def updateSummonerInfo(connection):
 async def canUseUserName(connection, name):
     return (await (await connection.request('get', '/lol-summoner/v1/check-name-availability/' + name)).json())
 
+async def getUserDB():
+    file = open("userdb.txt", "r")
+    userDB = file.read()
+    file.close()
+    return userDB
+
+async def findUserDB(username):
+    file = open("userdb.txt", "r")
+    flag = False
+    userDB = file.readlines()
+    for line in userDB:
+        #print("findUserDB -> " + line)
+        userData = eval(line)
+        if userData['UserName'] == username:
+            flag = True
+            break
+    file.close()
+    if flag:
+        return userData
+    else:
+        return False
+
+async def addUserDB(userDict):
+    file = open("userdb.txt", "a")
+    newUser = str(userDict)
+    #print("addUserDB -> " + newUser + "\n")
+    file.write(newUser + "\n")
+    file.close()
+
+async def editUserDB(username, key, value):
+    file = open("userdb.txt", "r")
+    newUsersDB = []
+    userDB = file.readlines()
+    for line in userDB:
+        #print("line -> " + line)
+        userData = eval(line)
+        if userData['UserName'] == username:
+            userData[key] = value
+        newUsersDB.append(userData)
+        #print("newUsersDB fixed -> " + str(newUsersDB))
+    file.close()
+    await setUserDB(newUsersDB)
+    
+
+async def setUserDB(usersList):
+    #print("setUserDB -> " + str(usersList))
+    file = open("userdb.txt", "w")
+    newData = ""
+    for userDict in usersList:
+        newData = newData + str(userDict) + "\n"
+    file.write(newData)
+    file.close()
+
 async def cmdHelp(parameter):
     connection = lastConnection
     helpIndex = parameter[0]
+    outMsg = ""
     if helpIndex == "" or helpIndex == "1":
-        await sendMessage(connection, "[help 1/2]\n/hi: ...\n/time: ...\n/membercount: ...")
+        outMsg = outMsg + "[help 1/2]\n/hi: ...\n/time: ...\n/membercount: ...\n"
+        await sendMessage(connection, outMsg)
     elif helpIndex == "2":
-        await sendMessage(connection, "[help 2/2]\n/닉검색 닉네임: 닉네임이 사용중인지 검색합니다.")
+        outMsg = outMsg + "[help 2/2]\n/닉검색 닉네임: 닉네임이 사용중인지 검색합니다.\n"
+        outMsg = outMsg + "/생성: 닉네임을 등록합니다.\n"
+        outMsg = outMsg + "/정보 닉네임: ...\n"
+        await sendMessage(connection, outMsg)
 
 async def cmdHi(parameter):
     connection = lastConnection
@@ -88,7 +147,45 @@ async def cmdFindName(parameter):
     else:
         outMsg = "해당 닉네임은 사용중이 아닙니다."
     await sendMessage(connection, outMsg)
+
+async def cmdCreate(parameter):
+    connection  = lastConnection
+    lastMessage = lastEvent.data
+    userid      = lastMessage["fromSummonerId"]
+    username    = memberList[userid]
     
+    userDB = await findUserDB(username)
+    if userDB:
+        await sendMessage(connection, "이미 생성한 닉네임입니다.")
+        return
+
+    userDict = {
+        "UserName" : username,
+        "Level"    : 1,
+        "Point"    : 1000
+    }
+    await addUserDB(userDict)
+    await sendMessage(connection, "생성 완료.")
+
+async def cmdInfo(parameter):
+    connection  = lastConnection
+    lastMessage = lastEvent.data
+    userid      = lastMessage["fromSummonerId"]
+    username    = memberList[userid]
+    targetName    = parameter[0]
+    outMsg = ""
+
+    targetDB = await findUserDB(targetName)
+    if not targetDB:
+        await sendMessage(connection, "등록된 닉네임이 아닙니다.")
+        return
+
+    level = targetDB["Level"]
+    point = targetDB["Point"]
+    outMsg = outMsg + f"{targetName}'s Info\n"
+    outMsg = outMsg + f"Level -> {level}\n"
+    outMsg = outMsg + f"Point -> {point}"
+    await sendMessage(connection, outMsg)
 
 async def updateCommand():
     commands["help"] = cmdHelp
@@ -96,6 +193,8 @@ async def updateCommand():
     commands["time"] = cmdTime
     commands["membercount"] = cmdMemCount
     commands["닉검색"] = cmdFindName
+    commands["생성"]   = cmdCreate
+    commands["정보"]   = cmdInfo
 
 @connector.ready
 async def connect(connection):
