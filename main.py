@@ -44,14 +44,23 @@ async def updateSummonerInfo(connection):
     summoner = (await (await connection.request('get', '/lol-summoner/v1/current-summoner')).json())
     summonerID = summoner["summonerId"]
 
+async def canUseUserName(connection, name):
+    return (await (await connection.request('get', '/lol-summoner/v1/check-name-availability/' + name)).json())
+
 async def cmdHelp(parameter):
     connection = lastConnection
-    await sendMessage(connection, "reply-bot\n/hi /time /membercount")
+    helpIndex = parameter[0]
+    if helpIndex == "" or helpIndex == "1":
+        await sendMessage(connection, "[help 1/2]\n/hi: ...\n/time: ...\n/membercount: ...")
+    elif helpIndex == "2":
+        await sendMessage(connection, "[help 2/2]\n/닉검색 닉네임: 닉네임이 사용중인지 검색합니다.")
 
 async def cmdHi(parameter):
     connection = lastConnection
     lastMessage = lastEvent.data
-    await sendMessage(connection, memberList[lastMessage["fromSummonerId"]] + " hi!")
+    user = memberList[lastMessage["fromSummonerId"]]
+    outMsg = f"{user} hi!"
+    await sendMessage(connection, outMsg)
 
 async def cmdTime(parameter):
     connection = lastConnection
@@ -67,13 +76,26 @@ async def cmdTime(parameter):
 async def cmdMemCount(parameter):
     connection = lastConnection
     memberCount = await getMemberCount(connection)
-    await sendMessage(connection, "there is " + str(memberCount) + " players")
+    outMsg = f"{str(memberCount)}명"
+    await sendMessage(connection, outMsg)
+
+async def cmdFindName(parameter):
+    connection = lastConnection
+    name = parameter[0]
+    outMsg = ""
+    if not await canUseUserName(connection, name):
+        outMsg = "해당 닉네임은 사용중입니다."
+    else:
+        outMsg = "해당 닉네임은 사용중이 아닙니다."
+    await sendMessage(connection, outMsg)
+    
 
 async def updateCommand():
     commands["help"] = cmdHelp
     commands["hi"]   = cmdHi
     commands["time"] = cmdTime
     commands["membercount"] = cmdMemCount
+    commands["닉검색"] = cmdFindName
 
 @connector.ready
 async def connect(connection):
