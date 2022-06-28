@@ -13,7 +13,7 @@ commands = {}
 helpMaxPage = 3
 
 async def cmdHelp(parameter):
-    connection = cont.lastConnection
+    connection = await cont.getConnection()
     helpIndex = parameter[0]
     helpIndexIsEmpty = helpIndex == ""
 
@@ -48,14 +48,13 @@ async def cmdHelp(parameter):
     await chat.sendMessage(connection, outMsg)
 
 async def cmdHi(parameter):
-    connection = cont.lastConnection
-    lastMessage = cont.lastEvent.data
-    user = members.memberList[lastMessage["fromSummonerId"]]
+    connection = await cont.getConnection()
+    user       = await members.getChatOwner()
     outMsg = f"{user} hi!"
     await chat.sendMessage(connection, outMsg)
 
 async def cmdTime(parameter):
-    connection = cont.lastConnection
+    connection = await cont.getConnection()
     tm = time.localtime(time.time())
     year = str(tm.tm_year)
     mon  = str(tm.tm_mon)
@@ -66,17 +65,14 @@ async def cmdTime(parameter):
     await chat.sendMessage(connection, outMsg)
 
 async def cmdMemCount(parameter):
-    connection = cont.lastConnection
+    connection  = await cont.getConnection()
     memberCount = await members.getMemberCount(connection)
     outMsg = f"{str(memberCount)}명"
     await chat.sendMessage(connection, outMsg)
 
 async def cmdFindName(parameter):
-    connection = cont.lastConnection
-    name = ""
-    for i in parameter:
-        targetName = f"{name} {i}"
-    name = name[1:len(name)] # now targetName is " hello world name 123", remove first " ".
+    connection = await cont.getConnection()
+    name = " ".join(parameter)
     outMsg = ""
     if not await summoner.canUseUserName(connection, name):
         outMsg = "해당 닉네임은 사용중입니다."
@@ -85,10 +81,8 @@ async def cmdFindName(parameter):
     await chat.sendMessage(connection, outMsg)
 
 async def cmdCreate(parameter):
-    connection  = cont.lastConnection
-    lastMessage = cont.lastEvent.data
-    userid      = lastMessage["fromSummonerId"]
-    username    = members.memberList[userid]
+    connection  = await cont.getConnection()
+    username    = await members.getChatOwner()
     
     userDB = await db.findUserDB(username)
     if userDB:
@@ -104,19 +98,9 @@ async def cmdCreate(parameter):
     await chat.sendMessage(connection, "생성 완료.")
 
 async def cmdInfo(parameter):
-    connection  = cont.lastConnection
-    lastMessage = cont.lastEvent.data
-    userid      = lastMessage["fromSummonerId"]
-    username    = members.memberList[userid]
-    #targetName  = parameter[0]
+    connection  = await cont.getConnection()
+    targetName  = " ".join(parameter)
     outMsg = ""
-    
-    # if username contain whitespace, parameter will be like {"hello", "world", "name", "123"} ...
-    # for now.. concat them make username correctly
-    targetName = ""
-    for i in parameter:
-        targetName = f"{targetName} {i}"
-    targetName = targetName[1:len(targetName)] # now targetName is " hello world name 123", remove first " ".
 
     targetDB = await db.findUserDB(targetName)
     if not targetDB:
@@ -131,23 +115,16 @@ async def cmdInfo(parameter):
     await chat.sendMessage(connection, outMsg)
 
 async def cmdGive(parameter):
-    connection  = cont.lastConnection
-    lastMessage = cont.lastEvent.data
-    userid      = lastMessage["fromSummonerId"]
-    username    = members.memberList[userid]
-    paramLength = len(parameter)
-    targetName = ""
-
-    for i in range(paramLength-1): # now parameter is {"nick", "name", amount}, so concate [0] to [lastIndex-1]
-        targetName = f"{targetName} {parameter[i]}"
-    targetName = targetName[1:len(targetName)] # now targetName is " nick name", remove first " ".
-    amountIsDigit = parameter[paramLength-1].isdigit() # now, last parameter is amount
+    connection  = await cont.getConnection()
+    username    = await members.getChatOwner()
+    targetName    = " ".join(parameter[:-1])
+    amountIsDigit = parameter[-1].isdigit()
 
     if not amountIsDigit:
         await chat.sendMessage(connection, "잘못된 금액입니다.")
         return
 
-    amount      = int(parameter[paramLength-1]) # now, last parameter is amount
+    amount      = int(parameter[-1])
     outMsg = ""
     
     targetDB = await db.findUserDB(targetName)
@@ -179,8 +156,6 @@ async def cmdGive(parameter):
     await chat.sendMessage(connection, outMsg)
 
 async def cmdRPS(parameter):
-    connection  = await cont.getConnection()
-    lastMessage = await cont.getLastMessage()
     userName = await members.getChatOwner()
     userRPS = parameter[0]
     await rps.newRPS(userName, userRPS)
