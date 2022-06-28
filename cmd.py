@@ -16,10 +16,10 @@ async def cmdHelp(parameter):
 
     if helpIndexIsEmpty:
         helpIndex = "1"
-        
+
     helpIndexIsNum = helpIndex.isdigit()
     outMsg = ""
-    pages = f"[도움말 {helpIndex}/{helpMaxPage}"
+    pages = f"[도움말 {helpIndex}/{helpMaxPage}]"
 
     if not helpIndexIsNum:
         await chat.sendMessage(connection, "페이지는 숫자여야 합니다.")
@@ -33,13 +33,14 @@ async def cmdHelp(parameter):
         outMsg = outMsg + "/인사: 인사합니다!\n"
         outMsg = outMsg + "/시간: 현재 시간을 말합니다.\n"
         outMsg = outMsg + "/인원: 방에 있는 유저수를 말합니다."
-        await chat.sendMessage(connection, outMsg)
     elif helpIndex == "2":
         outMsg = outMsg + "/닉검색 닉네임: 닉네임이 사용중인지 검색합니다.\n"
         outMsg = outMsg + "/생성: 닉네임을 등록합니다.\n"
         outMsg = outMsg + "/정보 닉네임: 정보를 확인합니다.\n"
         outMsg = outMsg + "/기부 닉네임 금액: 포인트를 기부합니다."
-        await chat.sendMessage(connection, outMsg)
+    elif helpIndex == "3":
+        outMsg = outMsg + "업데이트중..!"
+    await chat.sendMessage(connection, outMsg)
 
 async def cmdHi(parameter):
     connection = cont.lastConnection
@@ -99,8 +100,15 @@ async def cmdInfo(parameter):
     lastMessage = cont.lastEvent.data
     userid      = lastMessage["fromSummonerId"]
     username    = members.memberList[userid]
-    targetName  = parameter[0]
+    #targetName  = parameter[0]
     outMsg = ""
+    
+    # if username contain whitespace, parameter will be like {"hello", "world", "name", "123"} ...
+    # for now.. concat them make username correctly
+    targetName = ""
+    for i in parameter:
+        targetName = f"{targetName} {i}"
+    targetName = targetName[1:len(targetName)] # now targetName is " hello world name 123", remove first " ".
 
     targetDB = await db.findUserDB(targetName)
     if not targetDB:
@@ -130,8 +138,20 @@ async def cmdGive(parameter):
     targetDB = await db.findUserDB(targetName)
     userDB   = await db.findUserDB(username)
 
+    if not userDB:
+        await chat.sendMessage(connection, "등록안된 유저는 해당 기능을 사용할 수 없습니다.")
+        return
+
+    if not targetDB:
+        await chat.sendMessage(connection, "대상을 찾을 수 없습니다.")
+        return
+
     if username == targetName:
         await chat.sendMessage(connection, "자신에게 보낼 수 없습니다.")
+        return
+
+    if amount < 1:
+        await chat.sendMessage(connection, "금액은 최소 1이여야 합니다.")
         return
 
     if amount > userDB["Point"]:
