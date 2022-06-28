@@ -14,7 +14,7 @@ import chat
 import cmd
 import db
 
-lastEvent = None
+#lastEvent = None
     
 @connector.ready
 async def connect(connection):
@@ -22,11 +22,14 @@ async def connect(connection):
     await room.updateRoomInfo(connection)
     await members.updateMemberList(connection)
     await cmd.updateCommand()
-    await chat.sendMessage(connection, "type /help for a list of commands.")
+    outMsg = ""
+    outMsg = outMsg + "\"/도움말\"을 입력해서 명령어를 확인하세요!\n"
+    outMsg = outMsg + f"현재 딜레이: {time.delay}초"
+    await chat.sendMessage(connection, outMsg)
 
 @connector.ws.register('/lol-chat/v1/conversations/', event_types=('CREATE',))
 async def onChatChanged(connection, event):
-    global lastEvent
+    #global lastEvent
     lastMessage = event.data
 
     if not "body" in lastMessage:
