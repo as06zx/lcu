@@ -3,7 +3,6 @@ from lcu_driver import Connector
 connector = Connector()
 
 import os.path
-import time
 import re
 
 import connect as cont
@@ -24,7 +23,7 @@ async def connect(connection):
     await cmd.updateCommand()
     outMsg = ""
     outMsg = outMsg + "\"/도움말\"을 입력해서 명령어를 확인하세요!\n"
-    outMsg = outMsg + f"현재 딜레이: {time.delay}초"
+    outMsg = outMsg + f"현재 딜레이: {chat.delay}초"
     await chat.sendMessage(connection, outMsg)
 
 @connector.ws.register('/lol-chat/v1/conversations/', event_types=('CREATE',))
