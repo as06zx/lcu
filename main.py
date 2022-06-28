@@ -6,6 +6,8 @@ import os.path
 import time
 import re
 
+import db
+
 summonerID = ''
 roomID = ''
 memberList = {}
@@ -47,59 +49,6 @@ async def updateSummonerInfo(connection):
 
 async def canUseUserName(connection, name):
     return (await (await connection.request('get', '/lol-summoner/v1/check-name-availability/' + name)).json())
-
-async def getUserDB():
-    file = open("userdb.txt", "r")
-    userDB = file.read()
-    file.close()
-    return userDB
-
-async def findUserDB(username):
-    file = open("userdb.txt", "r")
-    flag = False
-    userDB = file.readlines()
-    for line in userDB:
-        #print("findUserDB -> " + line)
-        userData = eval(line)
-        if userData['UserName'] == username:
-            flag = True
-            break
-    file.close()
-    if flag:
-        return userData
-    else:
-        return False
-
-async def addUserDB(userDict):
-    file = open("userdb.txt", "a")
-    newUser = str(userDict)
-    #print("addUserDB -> " + newUser + "\n")
-    file.write(newUser + "\n")
-    file.close()
-
-async def editUserDB(username, key, value):
-    file = open("userdb.txt", "r")
-    newUsersDB = []
-    userDB = file.readlines()
-    for line in userDB:
-        #print("line -> " + line)
-        userData = eval(line)
-        if userData['UserName'] == username:
-            userData[key] = value
-        newUsersDB.append(userData)
-        #print("newUsersDB fixed -> " + str(newUsersDB))
-    file.close()
-    await setUserDB(newUsersDB)
-    
-
-async def setUserDB(usersList):
-    #print("setUserDB -> " + str(usersList))
-    file = open("userdb.txt", "w")
-    newData = ""
-    for userDict in usersList:
-        newData = newData + str(userDict) + "\n"
-    file.write(newData)
-    file.close()
 
 async def cmdHelp(parameter):
     connection = lastConnection
@@ -155,7 +104,7 @@ async def cmdCreate(parameter):
     userid      = lastMessage["fromSummonerId"]
     username    = memberList[userid]
     
-    userDB = await findUserDB(username)
+    userDB = await db.findUserDB(username)
     if userDB:
         await sendMessage(connection, "이미 생성한 닉네임입니다.")
         return
@@ -165,7 +114,7 @@ async def cmdCreate(parameter):
         "Level"    : 1,
         "Point"    : 1000
     }
-    await addUserDB(userDict)
+    await db.addUserDB(userDict)
     await sendMessage(connection, "생성 완료.")
 
 async def cmdInfo(parameter):
@@ -176,7 +125,7 @@ async def cmdInfo(parameter):
     targetName  = parameter[0]
     outMsg = ""
 
-    targetDB = await findUserDB(targetName)
+    targetDB = await db.findUserDB(targetName)
     if not targetDB:
         await sendMessage(connection, "등록된 닉네임이 아닙니다.")
         return
@@ -201,8 +150,8 @@ async def cmdGive(parameter):
     amount      = int(parameter[1])
     outMsg = ""
     
-    targetDB = await findUserDB(targetName)
-    userDB   = await findUserDB(username)
+    targetDB = await db.findUserDB(targetName)
+    userDB   = await db.findUserDB(username)
 
     if username == targetName:
         await sendMessage(connection, "자신에게 보낼 수 없습니다.")
@@ -212,8 +161,8 @@ async def cmdGive(parameter):
         await sendMessage(connection, "보유중인 포인트보다 많습니다.")
         return
         
-    await editUserDB(username,   "Point", userDB["Point"]-amount)
-    await editUserDB(targetName, "Point", targetDB["Point"]+amount)
+    await db.editUserDB(username,   "Point", userDB["Point"]-amount)
+    await db.editUserDB(targetName, "Point", targetDB["Point"]+amount)
     outMsg = outMsg + f"{username} 포인트 기부 ({str(amount)}) -> {targetName}"
     await sendMessage(connection, outMsg)
     
@@ -254,9 +203,9 @@ async def onChatChanged(connection, event):
 
     userid      =   lastMessage["fromSummonerId"]
     username    =   memberList[userid]    
-    userDB      =   await findUserDB(username)
+    userDB      =   await db.findUserDB(username)
     if userDB:
-        await editUserDB(username, "Point", userDB["Point"]+1)
+        await db.editUserDB(username, "Point", userDB["Point"]+1)
 
     # move to here ->  userinfo -> later u-u
     if body[0:1] == "/":
