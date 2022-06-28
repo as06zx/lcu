@@ -37,11 +37,15 @@ async def onChatChanged(connection, event):
     cont.lastConnection = connection
     cont.lastEvent = event
 
+    if type == "system" and body == "joined_room":
+        await room.updateRoomInfo(connection)
+        await members.updateMemberList(connection)
+
     if type != "groupchat":
         return
 
     userid      =   lastMessage["fromSummonerId"]
-    username    =   members.memberList[userid]    
+    username    =   await members.getMemberName(userid)
     userDB      =   await db.findUserDB(username)
     if userDB:
         await db.editUserDB(username, "Point", userDB["Point"]+1)
