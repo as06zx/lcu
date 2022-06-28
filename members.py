@@ -9,3 +9,16 @@ async def updateMemberList(connection):
 async def getMemberCount(connection):
     members = (await (await connection.request('get', '/lol-lobby/v2/lobby/members/')).json())
     return len(members)
+
+async def checkMemberIsNone(key):
+    if not key in memberList:
+        return True
+    else:
+        return False
+
+async def getMemberName(id):
+    if not (await checkMemberIsNone(id)):
+        return memberList[id]
+
+    
+   
