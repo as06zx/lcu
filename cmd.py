@@ -7,16 +7,35 @@ import chat
 import db
 
 commands = {}
+helpMaxPage = 3
 
 async def cmdHelp(parameter):
     connection = cont.lastConnection
     helpIndex = parameter[0]
+    helpIndexIsEmpty = helpIndex == ""
+
+    if helpIndexIsEmpty:
+        helpIndex = "1"
+        
+    helpIndexIsNum = helpIndex.isdigit()
     outMsg = ""
+    pages = f"[도움말 {helpIndex}/{helpMaxPage}"
+
+    if not helpIndexIsNum:
+        await chat.sendMessage(connection, "페이지는 숫자여야 합니다.")
+        return
+    if int(helpIndex) > helpMaxPage:
+        await chat.sendMessage(connection, "페이지를 찾을 수 없습니다.")
+        
+    outMsg = outMsg + pages + "\n"
     if helpIndex == "" or helpIndex == "1":
-        outMsg = outMsg + "[help 1/2]\n/hi: ...\n/time: ...\n/membercount: ...\n"
+        outMsg = outMsg + "/도움말 페이지: 도움말을 확인합니다.\n"
+        outMsg = outMsg + "/인사: 인사합니다!\n"
+        outMsg = outMsg + "/시간: 현재 시간을 말합니다.\n"
+        outMsg = outMsg + "/인원: 방에 있는 유저수를 말합니다."
         await chat.sendMessage(connection, outMsg)
     elif helpIndex == "2":
-        outMsg = outMsg + "[help 2/2]\n/닉검색 닉네임: 닉네임이 사용중인지 검색합니다.\n"
+        outMsg = outMsg + "/닉검색 닉네임: 닉네임이 사용중인지 검색합니다.\n"
         outMsg = outMsg + "/생성: 닉네임을 등록합니다.\n"
         outMsg = outMsg + "/정보 닉네임: 정보를 확인합니다.\n"
         outMsg = outMsg + "/기부 닉네임 금액: 포인트를 기부합니다."
@@ -125,10 +144,12 @@ async def cmdGive(parameter):
     await chat.sendMessage(connection, outMsg)
     
 async def updateCommand():
-    commands["help"] = cmdHelp
-    commands["hi"]   = cmdHi
-    commands["time"] = cmdTime
-    commands["membercount"] = cmdMemCount
+    commands["?"]      = cmdHelp
+    commands["help"]   = cmdHelp
+    commands["도움말"] = cmdHelp
+    commands["인사"]   = cmdHi
+    commands["시간"]   = cmdTime
+    commands["인원"]   = cmdMemCount
     commands["닉검색"] = cmdFindName
     commands["생성"]   = cmdCreate
     commands["정보"]   = cmdInfo
