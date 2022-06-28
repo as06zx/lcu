@@ -2,6 +2,7 @@ lastConnection = None
 lastEvent      = None
 
 async def update(connection, event):
+    global lastConnection, lastEvent
     lastConnection = connection
     lastEvent      = event
 
