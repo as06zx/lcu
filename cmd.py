@@ -70,7 +70,10 @@ async def cmdMemCount(parameter):
 
 async def cmdFindName(parameter):
     connection = cont.lastConnection
-    name = parameter[0]
+    name = ""
+    for i in parameter:
+        targetName = f"{name} {i}"
+    name = name[1:len(name)] # now targetName is " hello world name 123", remove first " ".
     outMsg = ""
     if not await summoner.canUseUserName(connection, name):
         outMsg = "해당 닉네임은 사용중입니다."
@@ -125,16 +128,23 @@ async def cmdInfo(parameter):
     await chat.sendMessage(connection, outMsg)
 
 async def cmdGive(parameter):
-    if len(parameter) != 2:
-        #await sendMessage(connection, "!!")
-        return
-
     connection  = cont.lastConnection
     lastMessage = cont.lastEvent.data
     userid      = lastMessage["fromSummonerId"]
     username    = members.memberList[userid]
-    targetName  = parameter[0]
-    amount      = int(parameter[1])
+    paramLength = len(parameter)
+    targetName = ""
+
+    for i in range(paramLength-1): # now parameter is {"nick", "name", amount}, so concate [0] to [lastIndex-1]
+        targetName = f"{targetName} {parameter[i]}"
+    targetName = targetName[1:len(targetName)] # now targetName is " nick name", remove first " ".
+    amountIsDigit = parameter[paramLength-1].isdigit() # now, last parameter is amount
+
+    if not amountIsDigit:
+        await chat.sendMessage(connection, "잘못된 금액입니다.")
+        return
+
+    amount      = int(parameter[paramLength-1]) # now, last parameter is amount
     outMsg = ""
     
     targetDB = await db.findUserDB(targetName)
