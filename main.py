@@ -12,8 +12,6 @@ import room
 import chat
 import cmd
 import db
-
-#lastEvent = None
     
 @connector.ready
 async def connect(connection):
@@ -28,7 +26,6 @@ async def connect(connection):
 
 @connector.ws.register('/lol-chat/v1/conversations/', event_types=('CREATE',))
 async def onChatChanged(connection, event):
-    #global lastEvent
     lastMessage = event.data
 
     if not "body" in lastMessage:
@@ -36,8 +33,8 @@ async def onChatChanged(connection, event):
 
     body = lastMessage["body"]
     type = lastMessage["type"]
-    cont.lastConnection = connection
-    cont.lastEvent = event
+
+    await cont.update(connection, event)
 
     if type == "system" and body == "joined_room":
         await room.updateRoomInfo(connection)
@@ -46,13 +43,11 @@ async def onChatChanged(connection, event):
     if type != "groupchat":
         return
 
-    userid      =   lastMessage["fromSummonerId"]
-    username    =   await members.getMemberName(userid)
-    userDB      =   await db.findUserDB(username)
+    username = await members.getChatOwner()
+    userDB   = await db.findUserDB(username)
     if userDB:
         await db.editUserDB(username, "Point", userDB["Point"]+1)
 
-    # move to here ->  userinfo -> later u-u
     if body[0:1] == "/":
         command = (body[1:]).split(" ", 1)[0]
         parameters = re.split('\s+', body[len(command)+1:len(body)].strip())
