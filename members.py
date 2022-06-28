@@ -24,4 +24,7 @@ async def getMemberName(id):
 
 async def getChatOwner():
     userid = (await connect.getLastMessage())["fromSummonerId"]
-    return memberList[userid]
+    if not (await checkMemberIsNone(userid)):
+        return memberList[userid]
+
+    
