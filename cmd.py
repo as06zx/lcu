@@ -1,3 +1,4 @@
+import random
 import time
 
 import connect as cont
@@ -5,6 +6,8 @@ import summoner
 import members
 import chat
 import db
+
+import rps
 
 commands = {}
 helpMaxPage = 3
@@ -41,7 +44,7 @@ async def cmdHelp(parameter):
         outMsg = outMsg + "/정보 닉네임: 정보를 확인합니다.\n"
         outMsg = outMsg + "/기부 닉네임 금액: 포인트를 기부합니다."
     elif helpIndex == "3":
-        outMsg = outMsg + "업데이트중..!"
+        outMsg = outMsg + "/가위바위보 가위/바위/보: 가위바위보를 합니다.\n"
     await chat.sendMessage(connection, outMsg)
 
 async def cmdHi(parameter):
@@ -174,6 +177,16 @@ async def cmdGive(parameter):
     await db.editUserDB(targetName, "Point", targetDB["Point"]+amount)
     outMsg = outMsg + f"{username} 포인트 기부 ({str(amount)}) -> {targetName}"
     await chat.sendMessage(connection, outMsg)
+
+async def cmdRPS(parameter):
+    connection  = await cont.getConnection()
+    lastMessage = await cont.getLastMessage()
+    userName = await members.getChatOwner()
+    userRPS = parameter[0]
+    await rps.newRPS(userName, userRPS)
+    await rps.startRPS()
+    await rps.endRPS()
+    
     
 async def updateCommand():
     commands["?"]      = cmdHelp
@@ -186,3 +199,4 @@ async def updateCommand():
     commands["생성"]   = cmdCreate
     commands["정보"]   = cmdInfo
     commands["기부"]   = cmdGive
+    commands["가위바위보"] = cmdRPS
