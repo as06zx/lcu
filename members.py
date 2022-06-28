@@ -1,3 +1,5 @@
+import connect
+
 memberList = {}
 
 async def updateMemberList(connection):
@@ -20,5 +22,6 @@ async def getMemberName(id):
     if not (await checkMemberIsNone(id)):
         return memberList[id]
 
-    
-   
+async def getChatOwner():
+    userid = (await connect.getLastMessage())["fromSummonerId"]
+    return memberList[userid]
