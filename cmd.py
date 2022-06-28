@@ -27,7 +27,9 @@ async def cmdHelp(parameter):
     if int(helpIndex) > helpMaxPage:
         await chat.sendMessage(connection, "페이지를 찾을 수 없습니다.")
         
-    outMsg = outMsg + pages + "\n"
+    outMsg = outMsg + pages + " "
+    outMsg = outMsg + f"현재 딜레이: {chat.delay}초\n"
+
     if helpIndex == "" or helpIndex == "1":
         outMsg = outMsg + "/도움말 페이지: 도움말을 확인합니다.\n"
         outMsg = outMsg + "/인사: 인사합니다!\n"
