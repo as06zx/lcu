@@ -14,6 +14,7 @@ commands = {}
 helpMaxPage = 3
 
 async def cmdHelp(parameter):
+    print("cmdHelp")
     connection = await cont.getConnection()
     if not parameter:
         parameter.append("1")
@@ -156,7 +157,11 @@ async def cmdGive(parameter):
     await chat.sendMessage(connection, outMsg)
 
 async def cmdRPS(parameter):
-    userName = await members.getChatOwner()
+    userName   = await members.getChatOwner()
+    connection = await cont.getConnection()
+    if not parameter:
+        await chat.sendMessage(connection, "가위, 바위, 보 중에 한가지를 선택해주세요.")
+        return
     userRPS  = parameter[0]
     await rps.newRPS(userName, userRPS)
     await rps.startRPS()
