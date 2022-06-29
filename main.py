@@ -36,6 +36,7 @@ async def onChatChanged(connection, event):
 
     await cont.update(connection, event)
     await room.updateRoomInfo(connection)
+    await cmd.updateCommand()
 
     if type == "system" and body == "joined_room":
         await members.updateMemberList(connection)
@@ -54,6 +55,7 @@ async def onChatChanged(connection, event):
     if body[0:1] == "/":
         command, *parameters = body.split()
         command = command[1:]
+        #print(f"{command} -> {parameters}")
         if command in cmd.commands:
             await cmd.commands[command](parameters)
 
