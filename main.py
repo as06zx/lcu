@@ -35,9 +35,9 @@ async def onChatChanged(connection, event):
     type = lastMessage["type"]
 
     await cont.update(connection, event)
+    await room.updateRoomInfo(connection)
 
     if type == "system" and body == "joined_room":
-        await room.updateRoomInfo(connection)
         await members.updateMemberList(connection)
 
     if type != "groupchat":
@@ -52,8 +52,8 @@ async def onChatChanged(connection, event):
         await reaction.update(username)
 
     if body[0:1] == "/":
-        command = (body[1:]).split(" ", 1)[0]
-        parameters = re.split('\s+', body[len(command)+1:len(body)].strip())
+        command, *parameters = body.split()
+        command = command[1:]
         if command in cmd.commands:
             await cmd.commands[command](parameters)
 
