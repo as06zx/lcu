@@ -35,10 +35,10 @@ async def onChatChanged(connection, event):
     type = lastMessage["type"]
 
     await cont.update(connection, event)
-    await room.updateRoomInfo(connection)
-    await cmd.updateCommand()
 
     if type == "system" and body == "joined_room":
+        await room.updateRoomInfo(connection)
+        await cmd.updateCommand()
         await members.updateMemberList(connection)
 
     if type != "groupchat":
