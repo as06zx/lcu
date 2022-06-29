@@ -3,13 +3,15 @@ import time
 import room
 
 lastTimeSent = 0
-delay = 2 # for prevent spam, i make delay for it.
+delay = 2
 
-async def sendMessage(connection, text):
+async def sendMessage(connection, text, noSetDelay=False):
     global lastTimeSent
+    print("chat.sendMessage")
     if not (await checkDelay()):
         return
-    lastTimeSent = time.time()
+    if not noSetDelay:
+        lastTimeSent = time.time()
     messageDataBody = {
     "body": "/나 " + text,
     }
