@@ -3,7 +3,7 @@ import time
 import room
 
 lastTimeSent = 0
-delay = 2
+delay = 1
 
 async def sendMessage(connection, text, noSetDelay=False):
     global lastTimeSent
