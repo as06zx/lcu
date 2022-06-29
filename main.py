@@ -2,10 +2,10 @@ from lcu_driver import Connector
 
 connector = Connector()
 
-import os.path
 import re
 
 import connect as cont
+import reaction
 import summoner
 import members
 import room
@@ -47,6 +47,9 @@ async def onChatChanged(connection, event):
     userDB   = await db.findUserDB(username)
     if userDB:
         await db.editUserDB(username, "Point", userDB["Point"]+1)
+
+    if body[0:1] != "/":
+        await reaction.update(username)
 
     if body[0:1] == "/":
         command = (body[1:]).split(" ", 1)[0]
