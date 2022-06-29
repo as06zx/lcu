@@ -15,12 +15,9 @@ helpMaxPage = 3
 
 async def cmdHelp(parameter):
     connection = await cont.getConnection()
+    if not parameter:
+        parameter.append("1")
     helpIndex = parameter[0]
-    helpIndexIsEmpty = helpIndex == ""
-
-    if helpIndexIsEmpty:
-        helpIndex = "1"
-
     helpIndexIsNum = helpIndex.isdigit()
     outMsg = ""
     pages = f"[도움말 {helpIndex}/{helpMaxPage}]"
