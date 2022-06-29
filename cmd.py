@@ -176,8 +176,8 @@ async def cmdRandom(parameter):
 
 async def cmdReactionTest(parameter):
     username = await members.getChatOwner()
-    await reaction.newTest(username)
-    await reaction.start()
+    if (await reaction.newTest(username)):
+        await reaction.start()
     
     
 async def updateCommand():
