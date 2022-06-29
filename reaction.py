@@ -103,8 +103,13 @@ async def waiting():
             break
 
 async def newTest(username):
+    connection = await connect.getConnection()
+    if testIsInProgress:
+        await chat.sendMessage(connection, "테스트가 이미 진행중입니다.")
+        return False
     await resetData()
     await setUserName(username)
+    return True
 
 async def checkIsSuccess():
     print("reaction.checkIsSuccess " + str(testIsSuccess))
