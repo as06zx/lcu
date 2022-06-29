@@ -7,6 +7,7 @@ import members
 import chat
 import db
 
+import reaction
 import rps
 
 commands = {}
@@ -45,6 +46,8 @@ async def cmdHelp(parameter):
         outMsg = outMsg + "/기부 닉네임 금액: 포인트를 기부합니다."
     elif helpIndex == "3":
         outMsg = outMsg + "/가위바위보 가위/바위/보: 가위바위보를 합니다.\n"
+        outMsg = outMsg + "/랜덤: 랜덤한 수를 뽑습니다.\n"
+        outMsg = outMsg + "/반응속도: 반응속도 테스트를 합니다."
     await chat.sendMessage(connection, outMsg)
 
 async def cmdHi(parameter):
@@ -157,10 +160,22 @@ async def cmdGive(parameter):
 
 async def cmdRPS(parameter):
     userName = await members.getChatOwner()
-    userRPS = parameter[0]
+    userRPS  = parameter[0]
     await rps.newRPS(userName, userRPS)
     await rps.startRPS()
     await rps.endRPS()
+
+async def cmdRandom(parameter):
+    connection = await cont.getConnection()
+    username   = await members.getChatOwner()
+    value = random.randint(0, 100)
+    outMsg = f"{username} -> {value}"
+    await chat.sendMessage(connection, outMsg)
+
+async def cmdReactionTest(parameter):
+    username = await members.getChatOwner()
+    await reaction.newTest(username)
+    await reaction.start()
     
     
 async def updateCommand():
@@ -175,3 +190,5 @@ async def updateCommand():
     commands["정보"]   = cmdInfo
     commands["기부"]   = cmdGive
     commands["가위바위보"] = cmdRPS
+    commands["랜덤"]   = cmdRandom
+    commands["반응속도"] = cmdReactionTest
