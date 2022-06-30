@@ -2,8 +2,6 @@ from lcu_driver import Connector
 
 connector = Connector()
 
-import re
-
 import connect as cont
 import reaction
 import summoner
