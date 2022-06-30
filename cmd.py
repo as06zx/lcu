@@ -8,13 +8,13 @@ import chat
 import db
 
 import reaction
+import anony
 import rps
 
 commands = {}
-helpMaxPage = 3
+helpMaxPage = 4
 
 async def cmdHelp(parameter):
-    print("cmdHelp")
     connection = await cont.getConnection()
     if not parameter:
         parameter.append("1")
@@ -36,9 +36,9 @@ async def cmdHelp(parameter):
         outMsg = outMsg + "/도움말 페이지: 도움말을 확인합니다.\n"
         outMsg = outMsg + "/인사: 인사합니다!\n"
         outMsg = outMsg + "/시간: 현재 시간을 말합니다.\n"
-        outMsg = outMsg + "/인원: 방에 있는 유저수를 말합니다."
+        outMsg = outMsg + "/인원: 방에 있는 유저수를 말합니다.\n"
+        outMsg = outMsg + "/닉검색 닉네임: 사용가능한 닉네임인지 확인합니다."
     elif helpIndex == "2":
-        outMsg = outMsg + "/닉검색 닉네임: 닉네임이 사용중인지 검색합니다.\n"
         outMsg = outMsg + "/생성: 닉네임을 등록합니다.\n"
         outMsg = outMsg + "/정보 닉네임: 정보를 확인합니다.\n"
         outMsg = outMsg + "/기부 닉네임 금액: 포인트를 기부합니다."
@@ -46,6 +46,9 @@ async def cmdHelp(parameter):
         outMsg = outMsg + "/가위바위보 가위/바위/보: 가위바위보를 합니다.\n"
         outMsg = outMsg + "/랜덤: 랜덤한 수를 뽑습니다.\n"
         outMsg = outMsg + "/반응속도: 반응속도 테스트를 합니다."
+    elif helpIndex == "4":
+        outMsg = outMsg + "/익명쓰기: 익명 메세지를 남길 수 있습니다.\n"
+        outMsg = outMsg + "/익명보기: 무작위 익명 메세지를 말합니다."
     await chat.sendMessage(connection, outMsg)
 
 async def cmdHi(parameter):
@@ -179,6 +182,12 @@ async def cmdReactionTest(parameter):
     if (await reaction.newTest(username)):
         await reaction.start()
     
+async def cmdAnonySee(parameter):
+    await anony.seeAnony()
+
+async def cmdAnonyAdd(parameter):
+    text = " ".join(parameter)
+    await anony.addAnony(text)
     
 async def updateCommand():
     commands["?"]      = cmdHelp
@@ -194,3 +203,5 @@ async def updateCommand():
     commands["가위바위보"] = cmdRPS
     commands["랜덤"]   = cmdRandom
     commands["반응속도"] = cmdReactionTest
+    commands["익명보기"]   = cmdAnonySee # i think this is bad anyway later i will change all!
+    commands["익명쓰기"]   = cmdAnonyAdd # maybe better tuesplit function in anony module..
